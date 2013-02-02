@@ -1,0 +1,30 @@
+﻿<Window x:Class="LineGeometry.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:LineGeometry"
+        Title="MainWindow" Height="480" Width="640"
+        >
+    <Grid>
+
+        <l:GeometryLine
+            Part="M 10,100 L 100,100 100,50 Z M 10,10 100,10 100,40 Z"
+            Fill="Black"
+            Stroke="Black"
+            PartsPerLine="10"
+            X1="100"
+            Y1="200"
+            X2="300"
+            Y2="400"
+            />
+
+        <Line
+            Fill="Red"
+            Stroke="Red"
+            StrokeThickness="3"
+            X1="100"
+            Y1="200"
+            X2="300"
+            Y2="400"
+            />
+
+    </Grid>
+</Window>
