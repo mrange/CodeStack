@@ -22,24 +22,13 @@ namespace LineGeometry
 {
     public partial class GeometryLine : FrameworkElement
     {
-        static readonly Geometry s_defaultPart = Geometry.Parse("F0 M10,100 L100,100 100,50Z").FreezeObject(); 
-        Geometry m_cachedGeometry;
+        static readonly Geometry s_defaultPart = Geometry.Parse("F0 M10,100 L100,100 100,50Z").FreezeObject();
+        Drawing m_cachedDrawing;
         Pen m_cachedPen;
 
         void Invalidate()
         {
-            InvalidateVisual();
-        }
-
-        void InvalidateStroke()
-        {
-            m_cachedPen = null;
-            InvalidateVisual();
-        }
-
-        void InvalidateGeometry()
-        {
-            m_cachedGeometry = null;
+            m_cachedDrawing = null;
             InvalidateVisual();
         }
 
@@ -56,22 +45,42 @@ namespace LineGeometry
             }
         }
 
-        Geometry CachedGeometry
+        Drawing CachedDrawing
         {
             get
             {
-                if (m_cachedGeometry == null)
+                if (m_cachedDrawing == null)
                 {
-                    var geometry = ComputeGeometry(Part, PartBoundsScale, PartsPerLine, X1, Y1, X2, Y2);
+                    var drawing = ComputeDrawing(
+                        Fill,
+                        CachedPen,
+                        Part, 
+                        PartBoundsScale, 
+                        PartsPerLine, 
+                        X1, 
+                        Y1, 
+                        X2, 
+                        Y2
+                        );
 
-                    m_cachedGeometry = geometry.FreezeObject();
+                    m_cachedDrawing = drawing.FreezeObject();
                 }
 
-                return m_cachedGeometry ?? Geometry.Empty;
+                return m_cachedDrawing;
             }
         }
 
-        static Geometry ComputeGeometry(Geometry partGeometry, double partBoundsScale, int partsPerLine, double x1, double y1, double x2, double y2)
+        static Drawing ComputeDrawing(
+            Brush brush,
+            Pen pen,
+            Geometry partGeometry, 
+            double partBoundsScale, 
+            int partsPerLine, 
+            double x1, 
+            double y1, 
+            double x2, 
+            double y2
+            )
         {
             partsPerLine = Math.Max(2, partsPerLine);
 
@@ -83,7 +92,7 @@ namespace LineGeometry
             var centreOf = adjustedPartBounds.CentreOf();
 
             var start = new Vector(x1, y1);
-            var end = new Vector(x2, y2);
+            var end = new Vector(x2, y2);                       
 
             var diff = end - start;
             var distance = diff.Length;
@@ -91,43 +100,39 @@ namespace LineGeometry
             var step = new Vector(diff.X/(partsPerLine - 1), diff.Y/(partsPerLine - 1));
 
             var partScaling = distance/(adjustedPartBounds.Width*partsPerLine);
-            var partRotation = Math.Atan2(diff.X, diff.Y)*180/Math.PI;
+            var partRotation = Math.Atan2(diff.Y, diff.X)*180/Math.PI;
 
             var matrix = Matrix.Identity;
             matrix.Translate(-centreOf.X, -centreOf.Y);
             matrix.Rotate(partRotation);
             matrix.Scale(partScaling, partScaling);
 
-            var geometryGroup = new GeometryGroup();
-
-            var current = start;
-
-            for (var iter = 0; iter < partsPerLine; ++iter)
+            var dv = new DrawingVisual();
+            using (var dc = dv.RenderOpen())
             {
-                // Using CombinedGeometry to avoid potentially expensive clone
+                var current = start;
 
-                var innerMatrix = matrix;
-                innerMatrix.Translate(current.X, current.Y);
-                var innerTransform = new MatrixTransform(innerMatrix);
+                for (var iter = 0; iter < partsPerLine; ++iter)
+                {
+                    var innerMatrix = matrix;
+                    innerMatrix.Translate(current.X, current.Y);
+                    var innerTransform = new MatrixTransform(innerMatrix);
 
-                var innerPart = new CombinedGeometry(
-                    GeometryCombineMode.Union,
-                    part,
-                    null,
-                    innerTransform
-                    );
+                    dc.PushTransform(innerTransform);
+                    dc.DrawGeometry(brush, pen, part);
+                    dc.Pop();
 
-                geometryGroup.Children.Add(innerPart);
+                    current = current + step;
+                }
 
-                current = current + step;
             }
 
-            return geometryGroup;
+            return dv.Drawing;
         }
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            return CachedGeometry.Bounds.Size;
+            return CachedDrawing.Bounds.Size;
         }
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -142,7 +147,7 @@ namespace LineGeometry
 
         partial void Changed_Stroke(Brush oldValue, Brush newValue)
         {
-            InvalidateStroke();
+            Invalidate();
         }
 
         partial void Coerce_StrokeThickness(double value, ref double coercedValue)
@@ -152,12 +157,12 @@ namespace LineGeometry
 
         partial void Changed_StrokeThickness(double oldValue, double newValue)
         {
-            InvalidateStroke();
+            Invalidate();
         }
 
         partial void Changed_Part(Geometry oldValue, Geometry newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Coerce_PartsPerLine(int value, ref int coercedValue)
@@ -167,37 +172,37 @@ namespace LineGeometry
 
         partial void Changed_PartsPerLine(int oldValue, int newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Changed_PartBoundsScale(double oldValue, double newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Changed_X1(double oldValue, double newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Changed_Y1(double oldValue, double newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Changed_X2(double oldValue, double newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         partial void Changed_Y2(double oldValue, double newValue)
         {
-            InvalidateGeometry();
+            Invalidate();
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            drawingContext.DrawGeometry(Fill, CachedPen, CachedGeometry);
+            drawingContext.DrawDrawing (CachedDrawing);
         }
 
     }

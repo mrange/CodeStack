@@ -131,7 +131,7 @@ namespace LineGeometry
             typeof (double),
             typeof (GeometryLine),
             new FrameworkPropertyMetadata (
-                default (double),
+                1.0,
                 FrameworkPropertyMetadataOptions.None,
                 Changed_StrokeThickness,
                 Coerce_StrokeThickness          

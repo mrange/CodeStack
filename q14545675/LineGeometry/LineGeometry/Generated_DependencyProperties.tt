@@ -22,7 +22,7 @@
         {
             P ("Brush"      ,   "Fill"              ),
             P ("Brush"      ,   "Stroke"            ),
-            P ("double"     ,   "StrokeThickness"   ),
+            P ("double"     ,   "StrokeThickness"   ,   defaultValue:"1.0"  ),
 
             P ("int"        ,   "PartsPerLine"      ,   defaultValue:"5"    ),
             P ("double"     ,   "PartBoundsScale"   ,   defaultValue:"1.1"  ),
