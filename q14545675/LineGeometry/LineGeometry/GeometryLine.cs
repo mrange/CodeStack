@@ -50,7 +50,7 @@ namespace LineGeometry
                 var stroke = Stroke;
                 if (m_cachedPen == null && stroke != null)
                 {
-                    m_cachedPen = new Pen(stroke, StrokeThickness);
+                    m_cachedPen = new Pen(stroke, StrokeThickness).FreezeObject();
                 }
                 return m_cachedPen;
             }
@@ -93,21 +93,12 @@ namespace LineGeometry
             var partScaling = distance/(adjustedPartBounds.Width*partsPerLine);
             var partRotation = Math.Atan2(diff.X, diff.Y)*180/Math.PI;
 
-            var transform =
-                new TransformGroup
-                    {
-                        Children =
-                            new TransformCollection
-                                {
-                                    new TranslateTransform(-centreOf.X, -centreOf.Y),
-                                    new RotateTransform(partRotation),
-                                    new ScaleTransform(partScaling, partScaling),
-                                },
-                    };
+            var matrix = Matrix.Identity;
+            matrix.Translate(-centreOf.X, -centreOf.Y);
+            matrix.Rotate(partRotation);
+            matrix.Scale(partScaling, partScaling);
 
-            var matrix = transform.Value;
-
-            var group = new GeometryGroup();
+            var geometryGroup = new GeometryGroup();
 
             var current = start;
 
@@ -115,23 +106,15 @@ namespace LineGeometry
             {
                 var clone = part.Clone();
 
-                var cloneTransform =
-                    new TransformGroup
-                        {
-                            Children =
-                                new TransformCollection
-                                    {
-                                        new MatrixTransform(matrix),
-                                        new TranslateTransform(current.X, current.Y),
-                                    },
-                        };
+                var cloneMatrix = matrix;
+                cloneMatrix.Translate(current.X, current.Y);
+                clone.Transform = new MatrixTransform(cloneMatrix);
 
-                clone.Transform = cloneTransform;
-                @group.Children.Add(clone);
+                geometryGroup.Children.Add(clone);
 
                 current = current + step;
             }
-            return @group;
+            return geometryGroup;
         }
 
         protected override Size MeasureOverride(Size availableSize)
