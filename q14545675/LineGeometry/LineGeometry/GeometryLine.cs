@@ -104,16 +104,24 @@ namespace LineGeometry
 
             for (var iter = 0; iter < partsPerLine; ++iter)
             {
-                var clone = part.Clone();
+                // Using CombinedGeometry to avoid potentially expensive clone
 
-                var cloneMatrix = matrix;
-                cloneMatrix.Translate(current.X, current.Y);
-                clone.Transform = new MatrixTransform(cloneMatrix);
+                var innerMatrix = matrix;
+                innerMatrix.Translate(current.X, current.Y);
+                var innerTransform = new MatrixTransform(innerMatrix);
 
-                geometryGroup.Children.Add(clone);
+                var innerPart = new CombinedGeometry(
+                    GeometryCombineMode.Union,
+                    part,
+                    null,
+                    innerTransform
+                    );
+
+                geometryGroup.Children.Add(innerPart);
 
                 current = current + step;
             }
+
             return geometryGroup;
         }
 
