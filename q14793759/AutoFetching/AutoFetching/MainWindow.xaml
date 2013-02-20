@@ -1,0 +1,33 @@
+﻿<Window 
+    x:Class="AutoFetching.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="MainWindow" 
+    MinHeight="350" 
+    MinWidth="525"
+    >
+
+    <ListBox 
+        x:Name="Items"
+        ScrollViewer.VerticalScrollBarVisibility="Visible"
+        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+        VirtualizingStackPanel.IsVirtualizing="True"
+        VirtualizingStackPanel.VirtualizationMode="Standard"
+        >
+        <ListBox.ItemTemplate>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding Path=Id, Mode=OneTime}" />
+                <TextBlock Grid.Column="1" Text="{Binding Path=FirstName, Mode=OneTime}" />
+                <TextBlock Grid.Column="2" Text="{Binding Path=LastName, Mode=OneTime}" />
+
+                </Grid>
+            </DataTemplate>
+        </ListBox.ItemTemplate>    
+    </ListBox>
+</Window>
