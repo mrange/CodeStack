@@ -1,0 +1,60 @@
+﻿<#@ include file="$(SolutionDir)\packages\T4IncludeTemplate.1.0.3\T4\Schema.ttinclude"#>
+
+<#
+
+    var namespaceName               = "ModelGenerator";
+    var schema                      = GetSchema (@"Data Source=localhost\SQLEXPRESS;Initial Catalog=TestDB;Integrated Security=True");
+    Func<string, string> justify    = s => LeftJustify (s, 40);
+
+    var tables                      = schema
+        .SchemaObjects
+        .Where (so => so.Type == SchemaObject.SchemaObjectType.Table)
+        .ToArray ()
+        ;
+#>
+
+namespace <#=namespaceName#>
+{
+<#
+    foreach (var table in tables)
+    {
+#>
+    /// <summary>
+    /// Poco class for <#=table.Name#>
+    /// </summary>
+    partial class <#=table.Name#>
+    {
+<#
+    foreach (var column in table.Columns)
+    {
+#>
+        public <#=justify (column.CsTypeName)#> <#=justify (column.Name)#>
+        {
+            get;
+            set;
+        }
+
+<#
+    }
+#> 
+
+    }
+<#
+    }
+#>
+}
+
+<#+
+
+    static Schema GetSchema (string connectionString) 
+    {
+        using (var connection = new SqlConnection (connectionString))
+        {
+            connection.Open ();
+
+            return new Schema (connection);
+        }
+    }
+
+
+#>
