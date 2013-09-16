@@ -20,6 +20,20 @@ namespace <#=namespaceName#>
     {
 #>
     /// <summary>
+    /// Repository interface for <#=table.Name#>
+    /// </summary>
+    partial interface I<#=table.Name#>Repository : IRepository<<#=table.Name#>>
+    {
+    }
+
+    /// <summary>
+    /// Repository class for <#=table.Name#>
+    /// </summary>
+    partial class <#=table.Name#>Repository : RepositoryBase<<#=table.Name#>>, I<#=table.Name#>Repository
+    {
+    }
+
+    /// <summary>
     /// Poco class for <#=table.Name#>
     /// </summary>
     partial class <#=table.Name#>
@@ -28,16 +42,71 @@ namespace <#=namespaceName#>
     foreach (var column in table.Columns)
     {
 #>
-        public <#=justify (column.CsTypeName)#> <#=justify (column.Name)#>
-        {
-            get;
-            set;
-        }
+        public <#=justify (column.CsTypeName)#> <#=justify (column.Name)#>{ get; set; }
 
 <#
     }
 #> 
 
+    /// <summary>
+    /// Command class for <#=table.Name#>
+    /// </summary>
+    partial class <#=table.Name#>Command : CommandBase, ICommand
+    {
+<#
+    foreach (var column in table.Columns)
+    {
+#>
+        public <#=justify (column.CsTypeName)#> <#=justify (column.Name)#> { get; set; }
+
+<#
+    }
+#> 
+    }
+
+    public class <#=table.Name#>CommandHandler : ICommandHandler<<#=table.Name#>Command>
+    {
+        private readonly IUsersRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
+        public <#=table.Name#>CommandHandler(IUsersRepository repository, IUnitOfWork unitOfWork)
+        {
+            _repository = repository;
+            _unitOfWork = unitOfWork;
+        }
+
+        public ICommandResult Execute(<#=table.Name#>Command command)
+        {
+            <#=table.Name#> entity;
+
+<#
+    var identityColumn = table.Columns.FirstOrDefault (c => c.IsIdentity);
+    if (identityColumn == null)
+    {
+#>
+@@@ ERROR__NO_IDENTITY_COLUMN_FOUND_FOR: <#=table.FullName#>
+<#
+    }
+    else
+    {
+#>
+            if (command.<#=identityColumn#> == 0)
+            {
+                entity = AutoMapper.Mapper.Map<<#=table.Name#>>(command);
+                _repository.Add(entity);
+            }
+            else
+            {
+                entity = _repository.Get(x=>x.UserId==command.<#=identityColumn#>);
+                entity = AutoMapper.Mapper.Map<<#=table.Name#>>(command);
+                _repository.Update(entity);
+            }
+            _unitOfWork.Commit(command.<#=identityColumn#>);         
+
+            return new CommandResult(true,entity.<#=identityColumn#>);
+<#
+    }
+#>
+        }
     }
 <#
     }
