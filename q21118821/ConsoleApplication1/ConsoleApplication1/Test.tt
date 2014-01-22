@@ -1,0 +1,10 @@
+﻿<#@ assembly name = "$(SolutionDir)\TestProj\bin\Debug\TestProj.dll"#>
+<#@ import namespace = "TestProj"#>
+
+namespace ConsoleApplication1
+{
+    class <#=Testing.Name#>
+    {
+    
+    }
+}
