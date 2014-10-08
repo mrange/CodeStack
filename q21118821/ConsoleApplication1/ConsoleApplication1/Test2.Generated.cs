@@ -1,5 +1,4 @@
-﻿
-namespace ConsoleApplication1
+﻿namespace ConsoleApplication1
 {
     class Test
     {
